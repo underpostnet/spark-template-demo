@@ -67,8 +67,8 @@ jobs:
           git clone https://github.com/underpostnet/spark-template.g8
           cd ..
           mv ./spark-template-demo.git ./spark-template/.git
-          mkdir -p ./spark-template/.github/workflows
-          cp -r ./tmp/spark-template.g8/.github/workflows ./spark-template/.github/workflows
+          mkdir -p ./spark-template/.github
+          cp -r ./tmp/spark-template.g8/.github/workflows ./spark-template/.github
           cd ./spark-template
           git remote set-url origin https://underpost:${GITHUB_TOKEN}@github.com/underpostnet/spark-template-demo.git
           git init
