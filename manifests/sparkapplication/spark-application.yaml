@@ -3,7 +3,7 @@ apiVersion: "sparkoperator.k8s.io/v1beta2"
 kind: SparkApplication
 metadata:
   # The name of your application instance in Kubernetes.
-  name: "$name$"
+  name: "spark-template"
   # The namespace where the Spark Operator is running.
   namespace: default
 spec:
@@ -12,18 +12,18 @@ spec:
   # The mode can be 'cluster' or 'client'. 'cluster' is standard for production.
   mode: cluster
   # The Spark version. MUST match the version in the Docker image and build.sbt.
-  sparkVersion: "$sparkVersion$"
+  sparkVersion: "3.5.5"
   # The main class that serves as the entry point for your application.
-  mainClass: "$organization$.HelloWorld"
+  mainClass: "net.underpost.HelloWorld"
   # The location of your application JAR inside the Docker container.
   # When running in a container, often just the JAR name is sufficient if it's
   # in a standard classpath location. The 'local://' scheme is crucial
   # to tell Spark the file is already in the image.
-  mainApplicationFile: "local:///opt/spark/jars/$name$.jar"
+  mainApplicationFile: "local:///opt/spark/jars/spark-template.jar"
 
   # IMPORTANT: Replace this with the actual name of your Docker image after
   # building and pushing it to a registry (like Docker Hub, GCR, ECR, etc.).
-  image: "localhost/$name$:$version$" # Using dynamic image name and version
+  image: "localhost/spark-template:0.0.11" # Using dynamic image name and version
 
   # Explicitly set the pull policy to 'Never'.
   # This is crucial for local Kind development to ensure Kubernetes does not
@@ -44,7 +44,7 @@ spec:
     cores: 1
     memory: "1024m" # e.g., 1 gigabyte
     labels:
-      version: "$sparkVersion$"
+      version: "3.5.5"
     # A service account with permissions to create and manage executor pods is required.
     serviceAccount: spark
 
@@ -54,4 +54,4 @@ spec:
     cores: 1
     memory: "1024m"
     labels:
-      version: "$sparkVersion$"
+      version: "3.5.5"

@@ -7,15 +7,15 @@ import org.apache.spark.sql.SparkSession
 // Define project versions.
 // The Scala version should match the one Spark was built with in your Docker image.
 // The apache/spark:3.5.5 image uses Scala 2.12.
-val scalaVersionUsed = "$scalaVersionUsed$" // A recent version of Scala 2.12
-val sparkVersion = "$sparkVersion$"
+val scalaVersionUsed = "2.12.18" // A recent version of Scala 2.12
+val sparkVersion = "3.5.5"
 
 lazy val root = (project in file("."))
   .settings(
-    name := "$name$",
+    name := "spark-template",
     version := "0.1.0-SNAPSHOT",
     scalaVersion := scalaVersionUsed,
-    organization := "$organization$",
+    organization := "net.underpost",
 
     // Define resolvers (repositories) for dependencies. Maven Central is standard.
     resolvers += "Maven Central" at "https://repo1.maven.org/maven2/",
@@ -38,13 +38,13 @@ lazy val root = (project in file("."))
       // Add RAPIDS Accelerator for Apache Spark core plugin.
       // IMPORTANT: Ensure this version is compatible with your Spark version.
       // "com.nvidia" is the correct group ID for the core RAPIDS artifacts.
-      "com.nvidia" %% "rapids-4-spark" % "$rapidsVersion$"
+      "com.nvidia" %% "rapids-4-spark" % "25.04.0"
     ),
 
     // sbt-assembly settings to create a runnable JAR
-    assembly / mainClass := Some("$organization$.runner.TestRunner"),
+    assembly / mainClass := Some("net.underpost.runner.TestRunner"),
     // Use a static JAR name to make the build process more robust.
-    assembly / assemblyJarName := "$name$.jar",
+    assembly / assemblyJarName := "spark-template.jar",
     // Include test classes in the assembly JAR to allow running tests on the cluster.
     // assembly / test := true,
     assembly / assemblyMergeStrategy := {

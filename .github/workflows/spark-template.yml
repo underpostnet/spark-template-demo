@@ -70,6 +70,8 @@ jobs:
           mkdir -p ./spark-template/.github
           cp -r ./tmp/spark-template.g8/.github/workflows ./spark-template/.github
           cd ./spark-template
+          chmod +x ./replace_params.sh
+          ./replace_params.sh
           git remote set-url origin https://underpost:${GITHUB_TOKEN}@github.com/underpostnet/spark-template-demo.git
           git init
           git add .

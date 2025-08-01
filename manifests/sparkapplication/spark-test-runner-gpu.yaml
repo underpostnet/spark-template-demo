@@ -35,7 +35,7 @@ apiVersion: "sparkoperator.k8s.io/v1beta2"
 kind: SparkApplication
 metadata:
   # The name of your application instance in Kubernetes.
-  name: "$name$-gpu-tests" # Dynamically set application name for GPU tests
+  name: "spark-template-gpu-tests" # Dynamically set application name for GPU tests
   # The namespace where the Spark Operator is running.
   namespace: default
 spec:
@@ -44,16 +44,16 @@ spec:
   # The mode can be 'cluster' or 'client'. 'cluster' is standard for production.
   mode: cluster
   # The Spark version. MUST match the version in the Docker image and build.sbt.
-  sparkVersion: "$sparkVersion$"
+  sparkVersion: "3.5.5"
   # The main class that serves as the entry point for your test runner.
-  mainClass: "$organization$.runner.TestRunner" # Dynamically set main class
+  mainClass: "net.underpost.runner.TestRunner" # Dynamically set main class
   # The location of your application JAR inside the Docker container.
   # The 'local://' scheme is crucial to tell Spark the file is already in the image.
-  mainApplicationFile: "local:///opt/spark/jars/$name$.jar" # Dynamically set JAR name
+  mainApplicationFile: "local:///opt/spark/jars/spark-template.jar" # Dynamically set JAR name
 
   # IMPORTANT: Replace this with the actual name of your Docker image after
   # building and pushing it to a registry (like Docker Hub, GCR, ECR, etc.).
-  image: "localhost/$name$:$version$" # Using dynamic image name and version
+  image: "localhost/spark-template:0.0.11" # Using dynamic image name and version
 
   # Explicitly set the pull policy to 'Never'.
   # This is crucial for local Kind development to ensure Kubernetes does not
@@ -76,7 +76,7 @@ spec:
     coreLimit: "1000m" # Added coreLimit for the driver
     memory: "1024m" # e.g., 1 gigabyte
     labels:
-      version: "$sparkVersion$" # Dynamically set Spark version label
+      version: "3.5.5" # Dynamically set Spark version label
       app-role: test-driver
     # A service account with permissions to create and manage executor pods is required.
     serviceAccount: spark
@@ -99,7 +99,7 @@ spec:
       name: "nvidia.com/gpu"
       quantity: 1
     labels:
-      version: "$sparkVersion$" # Dynamically set Spark version label
+      version: "3.5.5" # Dynamically set Spark version label
       app-role: test-executor
     # Node affinity to schedule executors on nodes with GPU capabilities,
     # based on NFD labels.
