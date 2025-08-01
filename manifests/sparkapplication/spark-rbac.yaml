@@ -1,0 +1,45 @@
+# -------------------------------------------------------------------
+# FILE: spark-rbac.yaml
+# -------------------------------------------------------------------
+# This file defines the necessary Role-Based Access Control (RBAC)
+# resources for the Spark driver pod to operate within the Kubernetes cluster.
+# The driver needs permissions to create and manage its executor pods.
+
+---
+# 1. ServiceAccount: An identity for the Spark driver pods.
+# Your SparkApplication manifest refers to this by name.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: spark
+  namespace: default
+
+---
+# 2. Role: A set of permissions within the 'default' namespace.
+# This grants the ability to manage pods and services, which the driver needs for its executors.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: spark-role
+  namespace: default
+rules:
+  - apiGroups: [""] # Core API group
+    resources: ["pods", "services", "configmaps", "persistentvolumeclaims"]
+    verbs: ["create", "get", "list", "watch", "delete", "deletecollection"]
+
+---
+# 3. RoleBinding: Connects the 'spark' ServiceAccount to the 'spark-role' Role.
+# This is what actually grants the permissions to the service account.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: spark-role-binding
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: spark
+    namespace: default
+roleRef:
+  kind: Role
+  name: spark-role
+  apiGroup: rbac.authorization.k8s.io

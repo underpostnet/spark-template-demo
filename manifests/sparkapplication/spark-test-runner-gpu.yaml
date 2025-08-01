@@ -1,0 +1,151 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spark-executor-pod-config # Name of the ConfigMap for the executor pod spec
+data:
+  pod-spec-fragment: | # Key under which the pod spec fragment is stored
+    spec:
+      containers:
+      - name: spark-kubernetes-executor
+        resources:
+          requests:
+            ephemeral-storage: "1Gi"
+          limits:
+            ephemeral-storage: "20Gi"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spark-driver-pod-config # Name of the ConfigMap for the driver pod spec
+data:
+  pod-spec-fragment: | # Key under which the pod spec fragment is stored
+    spec:
+      containers:
+        - name: spark-kubernetes-driver
+          resources:
+            requests:
+              ephemeral-storage: "1Gi"
+            limits:
+              ephemeral-storage: "20Gi"
+
+---
+# This manifest defines a SparkApplication resource for the Kubernetes Operator.
+apiVersion: "sparkoperator.k8s.io/v1beta2"
+kind: SparkApplication
+metadata:
+  # The name of your application instance in Kubernetes.
+  name: "$name$-gpu-tests" # Dynamically set application name for GPU tests
+  # The namespace where the Spark Operator is running.
+  namespace: default
+spec:
+  # The type of application (Scala, Python, R, or Java).
+  type: Scala
+  # The mode can be 'cluster' or 'client'. 'cluster' is standard for production.
+  mode: cluster
+  # The Spark version. MUST match the version in the Docker image and build.sbt.
+  sparkVersion: "$sparkVersion$"
+  # The main class that serves as the entry point for your test runner.
+  mainClass: "$organization$.runner.TestRunner" # Dynamically set main class
+  # The location of your application JAR inside the Docker container.
+  # The 'local://' scheme is crucial to tell Spark the file is already in the image.
+  mainApplicationFile: "local:///opt/spark/jars/$name$.jar" # Dynamically set JAR name
+
+  # IMPORTANT: Replace this with the actual name of your Docker image after
+  # building and pushing it to a registry (like Docker Hub, GCR, ECR, etc.).
+  image: "localhost/$name$:$version$" # Using dynamic image name and version
+
+  # Explicitly set the pull policy to 'Never'.
+  # This is crucial for local Kind development to ensure Kubernetes does not
+  # attempt to pull the image from a remote registry and instead uses the
+  # image already loaded into the Kind cluster.
+  imagePullPolicy: "Never"
+
+  # Restart policy for the Spark driver pod. For tests, we might not want to restart.
+  # 'Never' ensures that a failed test run is reported as a failure immediately.
+  restartPolicy:
+    type: Never
+    # onFailureRetries: 3
+    # onFailureRetryInterval: 10
+    # onSubmissionFailureRetries: 5
+    # onSubmissionFailureRetryInterval: 20
+
+  # Configuration for the Spark driver pod.
+  driver:
+    cores: 1
+    coreLimit: "1000m" # Added coreLimit for the driver
+    memory: "1024m" # e.g., 1 gigabyte
+    labels:
+      version: "$sparkVersion$" # Dynamically set Spark version label
+      app-role: test-driver
+    # A service account with permissions to create and manage executor pods is required.
+    serviceAccount: spark
+    # Add tolerations to allow scheduling on control-plane nodes (common in Kind)
+    tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Exists"
+        effect: "NoSchedule"
+      - key: "node-role.kubernetes.io/master" # Older master taint, good to include for compatibility
+        operator: "Exists"
+        effect: "NoSchedule"
+
+  # Configuration for the Spark executor pods.
+  executor:
+    cores: 1
+    coreLimit: "1000m"
+    instances: 1
+    memory: "1G"
+    gpu:
+      name: "nvidia.com/gpu"
+      quantity: 1
+    labels:
+      version: "$sparkVersion$" # Dynamically set Spark version label
+      app-role: test-executor
+    # Node affinity to schedule executors on nodes with GPU capabilities,
+    # based on NFD labels.
+    nodeSelector:
+      "nvidia.com/gpu.present": "true" # A common label applied by NVIDIA GPU operator/NFD
+    # Add tolerations to allow scheduling on control-plane nodes (common in Kind)
+    tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Exists"
+        effect: "NoSchedule"
+      - key: "node-role.kubernetes.io/master" # Older master taint, good to include for compatibility
+        operator: "Exists"
+        effect: "NoSchedule"
+
+  # Add Spark configuration properties.
+  sparkConf:
+    # Enabling RAPIDS plugin
+    spark.plugins: "com.nvidia.spark.SQLPlugin"
+    spark.rapids.sql.enabled: "true"
+    spark.rapids.force.caller.classloader: "false"
+    spark.executor.resource.gpu.vendor: "nvidia.com"
+    spark.executor.resource.gpu.discoveryScript: "/opt/spark/scripts/getGpusResources.sh"
+
+    # GPU allocation and discovery settings
+    spark.task.resource.gpu.amount: "1"
+    spark.executor.resource.gpu.amount: "1"
+    spark.kubernetes.driver.resource.gpu.vendor: "nvidia.com"
+    spark.kubernetes.driver.resource.gpu.amount: "1"
+    spark.kubernetes.driver.resource.gpu.discoveryScript: "/opt/spark/scripts/getGpusResources.sh"
+    spark.kubernetes.executor.resource.gpu.vendor: "nvidia.com"
+    spark.kubernetes.executor.resource.gpu.discoveryScript: "/opt/spark/scripts/getGpusResources.sh"
+    spark.rapids.shims-provider-override: "com.nvidia.spark.rapids.shims.spark355.SparkShimServiceProvider"
+
+    # Ephemeral storage configuration (these are correctly handled by Spark Operator
+    # through these sparkConf properties, not direct pod.spec.resources)
+    spark.kubernetes.driver.request.ephemeralStorage: "1Gi"
+    spark.kubernetes.driver.limit.ephemeralStorage: "20Gi"
+    spark.kubernetes.executor.request.ephemeralStorage: "1Gi"
+    spark.kubernetes.executor.limit.ephemeralStorage: "20Gi"
+
+    # Reference the ConfigMaps containing the pod spec fragments
+    # The Spark Operator will use these ConfigMaps to merge with the generated pod spec.
+    spark.kubernetes.driver.pod.configMapRef: "spark-driver-pod-config"
+    spark.kubernetes.executor.pod.configMapRef: "spark-executor-pod-config"
+
+    # Optional: Log detailed RAPIDS explanations for debugging and verification
+    spark.rapids.sql.explain: "true"
+    # Optional: For more verbose logging of RAPIDS activity
+    spark.rapids.sql.logLevel: "INFO" # or DEBUG

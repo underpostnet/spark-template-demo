@@ -1,0 +1,57 @@
+# This manifest defines a SparkApplication resource for the Kubernetes Operator.
+apiVersion: "sparkoperator.k8s.io/v1beta2"
+kind: SparkApplication
+metadata:
+  # The name of your application instance in Kubernetes.
+  name: "$name$"
+  # The namespace where the Spark Operator is running.
+  namespace: default
+spec:
+  # The type of application (Scala, Python, R, or Java).
+  type: Scala
+  # The mode can be 'cluster' or 'client'. 'cluster' is standard for production.
+  mode: cluster
+  # The Spark version. MUST match the version in the Docker image and build.sbt.
+  sparkVersion: "$sparkVersion$"
+  # The main class that serves as the entry point for your application.
+  mainClass: "$organization$.HelloWorld"
+  # The location of your application JAR inside the Docker container.
+  # When running in a container, often just the JAR name is sufficient if it's
+  # in a standard classpath location. The 'local://' scheme is crucial
+  # to tell Spark the file is already in the image.
+  mainApplicationFile: "local:///opt/spark/jars/$name$.jar"
+
+  # IMPORTANT: Replace this with the actual name of your Docker image after
+  # building and pushing it to a registry (like Docker Hub, GCR, ECR, etc.).
+  image: "localhost/$name$:$version$" # Using dynamic image name and version
+
+  # Explicitly set the pull policy to 'Never'.
+  # This is crucial for local Kind development to ensure Kubernetes does not
+  # attempt to pull the image from a remote registry and instead uses the
+  # image already loaded into the Kind cluster.
+  imagePullPolicy: "Never"
+
+  # Restart policy for the Spark driver pod.
+  restartPolicy:
+    type: OnFailure
+    onFailureRetries: 3
+    onFailureRetryInterval: 10
+    onSubmissionFailureRetries: 5
+    onSubmissionFailureRetryInterval: 20
+
+  # Configuration for the Spark driver pod.
+  driver:
+    cores: 1
+    memory: "1024m" # e.g., 1 gigabyte
+    labels:
+      version: "$sparkVersion$"
+    # A service account with permissions to create and manage executor pods is required.
+    serviceAccount: spark
+
+  # Configuration for the Spark executor pods.
+  executor:
+    instances: 2 # Number of executor pods to run.
+    cores: 1
+    memory: "1024m"
+    labels:
+      version: "$sparkVersion$"

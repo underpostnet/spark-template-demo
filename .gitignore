@@ -1,0 +1,9 @@
+/.bsp/
+target/
+.DS_Store
+.bloop
+.metals
+.vscode
+logs
+*.log
+*.tar
