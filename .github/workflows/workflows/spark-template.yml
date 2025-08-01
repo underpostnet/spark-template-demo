@@ -1,0 +1,79 @@
+name: Update spark template repo package
+
+on:
+  push:
+    branches: ['master']
+  pull_request:
+    branches: ['master']
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  spark-template:
+    if: github.repository == 'underpostnet/spark-template.g8' && startsWith(github.event.head_commit.message, 'ci(update-template)')
+    name: Update github repo package Jobs
+    runs-on: ubuntu-latest
+    container:
+      image: rockylinux/rockylinux:9
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install required packages
+        run: |
+          dnf install -y sudo tar gzip bzip2 git
+          dnf install -y curl --allowerasing
+          rm -f /etc/yum.repos.d/bintray-rpm.repo || true
+          curl -L https://www.scala-sbt.org/sbt-rpm.repo > sbt-rpm.repo
+          mv sbt-rpm.repo /etc/yum.repos.d/
+          yum install -y sbt
+
+      - name: Install Java
+        run: dnf install -y java-17-openjdk-devel
+
+      - name: Install Node.js
+        run: |
+          curl -fsSL https://rpm.nodesource.com/setup_23.x | bash -
+          dnf install nodejs -y
+
+      - name: Install dependencies and set repo configuration
+        env:
+          GITHUB_TOKEN: ${{ secrets.GIT_AUTH_TOKEN }}
+        run: |
+          npm install -g underpost
+          underpost config set GITHUB_TOKEN "$GITHUB_TOKEN"
+
+      - name: Set git global credentials
+        run: |
+          git config --global credential.helper store
+          git config --global user.name 'underpost.net'
+          git config --global user.email 'admin@underpost.net'
+
+      - name: Clone and Push to github package repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.GIT_AUTH_TOKEN }}
+        run: |
+          sbt new underpostnet/spark-template.g8 '--name=spark-template'
+          underpost clone --bare underpostnet/spark-template-demo
+          mkdir ./tmp
+          cd ./tmp
+          git clone https://github.com/underpostnet/spark-template.g8
+          cd ..
+          mv ./spark-template-demo.git ./spark-template/.git
+          mkdir -p ./spark-template/.github/workflows
+          cp -r ./tmp/spark-template.g8/.github/workflows ./spark-template/.github/workflows
+          cd ./spark-template
+          git remote set-url origin https://underpost:${GITHUB_TOKEN}@github.com/underpostnet/spark-template-demo.git
+          git init
+          git add .
+          git config user.name 'underpost.net'
+          git config user.email 'admin@underpost.net'
+          underpost cmt . ci docker-image-spark-template 'Update spark-template repo package'
+          underpost push . underpostnet/spark-template-demo
