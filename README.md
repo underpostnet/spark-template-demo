@@ -2,7 +2,7 @@
 
 <img alt='apache_spark' src='https://img.shields.io/badge/apache_spark%20v3.5.5-100000?style=flat&logo=apache-spark&logoColor=FFFFFF&labelColor=C76E00&color=727273'/> <img alt='scala' src='https://img.shields.io/badge/scala%20v2.12-100000?style=flat&logo=scala&logoColor=FFFFFF&labelColor=8b0000&color=727273'>
 
-[![Spark CI](https://github.com/underpostnet/spark-template-demo/actions/workflows/docker-image.yml/badge.svg?branch=master)](https://github.com/underpostnet/spark-template-demo/actions/workflows/docker-image.yml)
+[![Spark CI](https://github.com/underpostnet/spark-template-demo/actions/workflows/docker-image.yml/badge.svg)](https://github.com/underpostnet/spark-template-demo/actions/workflows/docker-image.yml)
 
 This project provides template for building, testing, and deploying Scala Spark applications on Kubernetes using the Spark Operator.
 
@@ -29,7 +29,7 @@ If you don't have sbt installed, follow the instructions on the [official sbt we
 
 #### 2. Create a New Project from the Template
 
-Open your terminal and run the following command. Replace `underpostnet` with the actual GitHub username where this template repository is hosted:
+Open your terminal and run the following command.
 
 ```bash
 sbt new underpostnet/spark-template.g8
