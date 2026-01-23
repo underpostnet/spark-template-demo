@@ -50,7 +50,7 @@ replace_variables() {
   # We use `sed -i` without an extension to perform in-place replacement on Linux systems.
   # The `|| sed -i '' -f "$sed_script" "$file_path"` provides a fallback for macOS.
   sed -i -f "$sed_script" "$file_path" || sed -i '' -f "$sed_script" "$file_path"
-  
+
   # Clean up the temporary sed script file
   rm "$sed_script"
 
@@ -68,7 +68,7 @@ scalaVersionUsedMajor = 2.12
 sparkVersion = 3.5.5
 rapidsVersion = 25.04.0
 description = An sbt template for Apache Spark applications with GPU support and ScalaTest.
-version = 0.0.11
+version = 0.0.12
 EOF
 echo "default.properties created."
 echo ""

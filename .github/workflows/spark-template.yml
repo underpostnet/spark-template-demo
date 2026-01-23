@@ -2,9 +2,9 @@ name: Update spark template repo package
 
 on:
   push:
-    branches: ['master']
+    branches: ["master"]
   pull_request:
-    branches: ['master']
+    branches: ["master"]
 
 permissions:
   contents: write
@@ -75,7 +75,7 @@ jobs:
           git remote set-url origin https://underpost:${GITHUB_TOKEN}@github.com/underpostnet/spark-template-demo.git
           git init
           git add .
-          git config user.name 'underpost.net'
+          git config user.name 'underpostnet'
           git config user.email 'admin@underpost.net'
           underpost cmt . ci docker-image-spark-template 'Spark template Docker Image CI'
           underpost push . underpostnet/spark-template-demo

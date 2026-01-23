@@ -1,7 +1,7 @@
 mkdir -p /home/dd
 
 PROJECT_DIR=/home/dd/spark-template
-PROJECT_VERSION=0.0.11
+PROJECT_VERSION=0.0.12
 IMAGE_NAME=spark-template
 
 IMAGE_NAME_FULL="${IMAGE_NAME}:${PROJECT_VERSION}"
@@ -14,7 +14,7 @@ sudo podman pull apache/spark:3.5.5-scala2.12-java17-python3-r-ubuntu
 
 sudo rm -rf ${PROJECT_DIR}/${IMAGE_NAME}_${PROJECT_VERSION}.tar
 
-underpost dockerfile-image-build --path ${PROJECT_DIR} --image-name=${IMAGE_NAME_FULL} --image-path=${PROJECT_DIR} --podman-save --kubeadm-load --reset
+underpost image --path ${PROJECT_DIR} --image-name=${IMAGE_NAME_FULL} --image-path=${PROJECT_DIR} --podman-save --kubeadm --reset
 
 # Apply the RBAC rules first to create the service account and its permissions.
 # This must be done before the SparkApplication is created.
