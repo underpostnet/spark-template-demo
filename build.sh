@@ -14,14 +14,14 @@ sudo podman pull docker.io/apache/spark:3.5.5-scala2.12-java17-python3-r-ubuntu
 
 sudo rm -rf ${PROJECT_DIR}/${IMAGE_NAME}_${PROJECT_VERSION}.tar
 
-underpost image --path ${PROJECT_DIR} --image-name=${IMAGE_NAME_FULL} --image-path=${PROJECT_DIR} --podman-save --kubeadm --reset
+underpost image --path ${PROJECT_DIR} --image-name=${IMAGE_NAME_FULL} --image-path=${PROJECT_DIR} --podman-save --kubeadm --reset --build
 
 # Apply the RBAC rules first to create the service account and its permissions.
 # This must be done before the SparkApplication is created.
 kubectl apply -f ./manifests/sparkapplication/spark-rbac.yaml
 
-kubectl delete sparkapplication spark-template
-kubectl delete sparkapplication spark-template-gpu-tests
+kubectl delete sparkapplication spark-template --ignore-not-found
+kubectl delete sparkapplication spark-template-gpu-tests --ignore-not-found
 
 kubectl apply -f ./manifests/sparkapplication/spark-application.yaml
 kubectl apply -f ./manifests/sparkapplication/spark-test-runner-gpu.yaml
